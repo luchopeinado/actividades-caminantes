@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de Actividades Scout - Caminantes</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        scout: {
+                            blue: '#1e3a8a', // Azul Caminantes
+                            lightBlue: '#3b82f6',
+                            yellow: '#ffca28', // Amarillo
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        body {
+            background-color: #f3f4f6;
+            background-image: url('data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%239C92AC" fill-opacity="0.1"%3E%3Cpath d="M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E');
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background-color: #cbd5e1;
+            border-radius: 10px;
+        }
+        
+        .day-column {
+            transition: all 0.3s ease;
+        }
+    </style>
+</head>
+<body class="text-gray-800 antialiased min-h-screen flex flex-col">
+
+    <header class="bg-scout-blue text-white shadow-md z-10 relative">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="flex items-center space-x-4">
+                <!-- Escudo con efecto Aura blanca difuminada -->
+                <img src="377420543_318557330700509_5357118656887334351_n.jpg" alt="Escudo G.S. Juana de Arco" class="h-16 w-auto bg-transparent drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]">
+                <div>
+                    <h1 class="text-2xl font-bold tracking-wide leading-tight">Comunidad Champaquí</h1>
+                    <p class="text-blue-200 text-sm font-medium mt-0.5">G.S. Juana de Arco 1232</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-3">
+                <button id="btn-login-modal" onclick="window.openModal('login-modal')" class="text-sm font-medium bg-scout-yellow text-scout-blue hover:bg-yellow-400 px-3 py-1.5 rounded-full transition-colors shadow-sm">
+                    <i class="fa-solid fa-user-lock mr-1"></i> Dirigente
+                </button>
+                <button id="btn-logout" class="text-sm font-medium bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-full transition-colors shadow-sm hidden">
+                    <i class="fa-solid fa-right-from-bracket mr-1"></i> Salir
+                </button>
+                <div class="text-sm font-medium bg-white/20 px-4 py-1.5 rounded-full flex items-center">
+                    <i class="fa-solid fa-fire mr-2 text-orange-300"></i> Siempre Listos
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-7xl mx-auto px-4 py-8 w-full grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <!-- COLUMNA IZQUIERDA: Formulario (Oculto por defecto para observadores) -->
+        <div id="form-column" class="lg:col-span-4 lg:col-start-1 hidden transition-all duration-300">
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 lg:p-6 sticky top-6 overflow-y-auto max-h-[85vh] custom-scrollbar">
+                <button type="button" onclick="toggleForm()" class="w-full flex justify-between items-center text-xl font-semibold text-scout-blue mb-4 border-b pb-2 hover:text-blue-800 transition-colors focus:outline-none">
+                    <span class="flex items-center"><i class="fa-solid fa-plus-circle mr-2"></i>Nueva Actividad</span>
+                    <i id="form-chevron" class="fa-solid fa-chevron-down transition-transform duration-300 transform rotate-180"></i>
+                </button>
+                
+                <form id="activity-form" class="space-y-4 text-sm hidden">
+                    <div>
+                        <label for="title" class="block font-medium text-gray-700 mb-1">Nombre de la Actividad</label>
+                        <input type="text" id="title" required placeholder="Ej: Raid a la sierra" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-scout-blue outline-none">
+                    </div>
+                    
+                    <div>
+                        <label for="date" class="block font-medium text-gray-700 mb-1">Fecha</label>
+                        <input type="date" id="date" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-scout-blue outline-none">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label for="coordinador" class="block font-medium text-gray-700 mb-1">Coordinador/a</label>
+                            <input type="text" id="coordinador" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-scout-blue outline-none">
+                        </div>
+                        <div>
+                            <label for="duracion" class="block font-medium text-gray-700 mb-1">Duración</label>
+                            <input type="text" id="duracion" required placeholder="Ej: 2 hs" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-scout-blue outline-none">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block font-medium text-gray-700 mb-2">Áreas de Desarrollo</label>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2" id="areas-container">
+                            <label class="flex items-start space-x-2 cursor-pointer"><input type="checkbox" value="Salud y Bienestar" class="text-scout-blue focus:ring-scout-blue rounded mt-1"> <span class="text-xs mt-0.5">Salud y Bienestar</span></label>
+                            <label class="flex items-start space-x-2 cursor-pointer"><input type="checkbox" value="Paz y desarrollo" class="text-scout-blue focus:ring-scout-blue rounded mt-1"> <span class="text-xs mt-0.5">Paz y desarrollo</span></label>
+                            <label class="flex items-start space-x-2 cursor-pointer"><input type="checkbox" value="Ambiente" class="text-scout-blue focus:ring-scout-blue rounded mt-1"> <span class="text-xs mt-0.5">Ambiente</span></label>
+                            <label class="flex items-start space-x-2 cursor-pointer"><input type="checkbox" value="Habilidades para la vida" class="text-scout-blue focus:ring-scout-blue rounded mt-1"> <span class="text-xs mt-0.5">Habilidades para la vida</span></label>
+                        </div>
+                    </div>
+
+                    <div class="pt-2 border-t border-gray-100">
+                        <button type="button" onclick="openAttendanceModal()" class="w-full bg-blue-50 hover:bg-blue-100 text-scout-blue border border-blue-200 font-medium py-2 px-4 rounded-lg transition-colors flex items-center justify-center">
+                            <i class="fa-solid fa-clipboard-user mr-2"></i> Tomar Asistencia (<span id="attendance-count">0</span>)
+                        </button>
+                    </div>
+
+                    <div>
+                        <label for="objetivo" class="block font-medium text-gray-700 mb-1">Objetivo</label>
+                        <textarea id="objetivo" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-scout-blue outline-none resize-none"></textarea>
+                    </div>
+                    
+                    <div>
+                        <label for="materiales" class="block font-medium text-gray-700 mb-1">Materiales</label>
+                        <textarea id="materiales" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-scout-blue outline-none resize-none"></textarea>
+                    </div>
+
+                    <div>
+                        <label for="introduccion" class="block font-medium text-gray-700 mb-1">Introducción</label>
+                        <textarea id="introduccion" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-scout-blue outline-none resize-none"></textarea>
+                    </div>
+
+                    <div>
+                        <label for="desarrollo" class="block font-medium text-gray-700 mb-1">Desarrollo</label>
+                        <textarea id="desarrollo" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-scout-blue outline-none resize-none"></textarea>
+                    </div>
+
+                    <div>
+                        <label for="conclusion" class="block font-medium text-gray-700 mb-1">Conclusión</label>
+                        <textarea id="conclusion" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-scout-blue outline-none resize-none"></textarea>
+                    </div>
+
+                    <div>
+                        <label for="plan_b" class="block font-medium text-gray-700 mb-1">Plan B</label>
+                        <textarea id="plan_b" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-scout-blue outline-none resize-none"></textarea>
+                    </div>
+
+                    <button type="submit" class="w-full bg-scout-blue hover:bg-blue-800 text-white font-semibold py-3 px-4 rounded-lg transition-colors shadow-sm flex items-center justify-center mt-4">
+                        <i class="fa-solid fa-thumbtack mr-2"></i> Fijar Actividad
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- COLUMNA DERECHA: Vista de Agenda (Por defecto ocupa toda la pantalla) -->
+        <div id="agenda-column" class="lg:col-span-12 transition-all duration-300">
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col sticky top-6 h-[85vh]">
+                
+                <div class="p-4 sm:p-6 border-b border-gray-100 flex flex-col sm:flex-row justify-between items-center bg-gray-50/50 gap-4">
+                    <h2 class="text-xl font-semibold text-gray-800 flex items-center">
+                        <i class="fa-regular fa-calendar-days text-scout-blue mr-2"></i> Agenda del Equipo
+                    </h2>
+                    
+                    <div class="flex items-center space-x-2">
+                        <button id="btn-prev-day" class="p-2 rounded-full hover:bg-gray-200 text-gray-600 transition-colors bg-white shadow-sm border border-gray-200" title="Anterior">
+                            <i class="fa-solid fa-chevron-left"></i>
+                        </button>
+                        <div class="text-sm font-semibold text-gray-800 bg-white border border-gray-200 px-4 py-1.5 rounded-md shadow-sm min-w-[140px] text-center" id="current-view-date">
+                            -
+                        </div>
+                        <button id="btn-next-day" class="p-2 rounded-full hover:bg-gray-200 text-gray-600 transition-colors bg-white shadow-sm border border-gray-200" title="Siguiente">
+                            <i class="fa-solid fa-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="flex-grow p-4 bg-gray-50/30 overflow-x-auto custom-scrollbar">
+                    <div class="flex gap-4 min-w-[850px] h-full" id="agenda-container">
+                        <!-- Columnas generadas por JS -->
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal Login de Dirigentes -->
+    <div id="login-modal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-sm flex flex-col overflow-hidden">
+            <div class="p-4 border-b flex justify-between items-center bg-scout-blue text-white">
+                <h3 class="text-lg font-bold"><i class="fa-solid fa-user-lock mr-2"></i>Acceso Dirigentes</h3>
+                <button onclick="closeModal('login-modal')" class="text-white/80 hover:text-white p-1">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+            <form id="login-form" class="p-6 space-y-4">
+                <p class="text-xs text-gray-500 mb-4 text-center">Ingresa la contraseña de educadores para planificar.</p>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Usuario</label>
+                    <input type="text" id="login-username" required placeholder="Ej: Dirigentes" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-scout-blue outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Contraseña</label>
+                    <input type="password" id="login-password" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-scout-blue outline-none">
+                </div>
+                <button type="submit" class="w-full bg-scout-blue hover:bg-blue-800 text-white font-semibold py-2.5 rounded-lg transition-colors mt-2 shadow-sm">
+                    Ingresar
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Detalles de Actividad -->
+    <div id="activity-modal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col">
+            <div class="p-4 border-b flex justify-between items-center bg-scout-blue text-white rounded-t-xl">
+                <h3 class="text-xl font-bold" id="modal-title">Título</h3>
+                <button onclick="closeModal('activity-modal')" class="text-white/80 hover:text-white p-1">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+            <div class="p-6 overflow-y-auto custom-scrollbar flex-grow" id="modal-content">
+                <!-- JS content -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Toma de Asistencia -->
+    <div id="attendance-modal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md max-h-[90vh] flex flex-col">
+            <div class="p-4 border-b flex justify-between items-center bg-gray-100 rounded-t-xl">
+                <h3 class="text-lg font-bold text-gray-800"><i class="fa-solid fa-users text-scout-blue mr-2"></i>Lista de Caminantes</h3>
+                <button onclick="closeModal('attendance-modal')" class="text-gray-500 hover:text-gray-800 p-1">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+            <div class="p-4 overflow-y-auto custom-scrollbar flex-grow" id="attendance-list-container">
+                <!-- JS content checkboxes -->
+            </div>
+            <div class="p-4 border-t bg-gray-50 rounded-b-xl flex justify-end">
+                <button onclick="saveAttendanceForm()" class="bg-scout-blue text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-800 transition-colors">
+                    Guardar Lista
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Configuración oficial de Tu Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyBjheviIcID66M9RorsKaUhIJ_zyLBydRI",
+            authDomain: "calendario-scout-590d0.firebaseapp.com",
+            projectId: "calendario-scout-590d0",
+            storageBucket: "calendario-scout-590d0.firebasestorage.app",
+            messagingSenderId: "1088652778101",
+            appId: "1:1088652778101:web:a4e70c7507caf8e805763c",
+            measurementId: "G-79J6LPQLYY"
+        };
+        
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+
+        let isAdmin = false;
+        let activities = [];
+        
+        // Lista oficial de la Comunidad Champaquí
+        const listaCaminantes = [
+            "Jerónimo Rivella", "Giuliana Porta", "Jazmín Pereyra", 
+            "Sara Pintos", "Francisco Fontana", "Tomás Obregón",
+            "Helena Rivella", "Morena Donaire", "Ludmila Andrada",
+            "Estefania Cavaglia", "Bautista Lopez"
+        ];
+
+        let currentAttendanceSelection = []; 
+        let focusDate = new Date();
+        let currentTimeline = []; 
+
+        function getLocalDateString(date) {
+            const d = new Date(date);
+            const offset = d.getTimezoneOffset() * 60000;
+            return (new Date(d - offset)).toISOString().split('T')[0];
+        }
+
+        function formatDayHeader(dateStr) {
+            const date = new Date(dateStr + 'T12:00:00');
+            return date.toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short' });
+        }
+
+        // Lógica: Muestra SOLO los sábados + cualquier fecha que tenga actividades
+        function calculateTimeline(centerDateStr) {
+            let datesSet = new Set();
+            activities.forEach(act => datesSet.add(act.date));
+            
+            let centerDateObj = new Date(centerDateStr + 'T12:00:00');
+            let start = new Date(centerDateObj);
+            start.setDate(start.getDate() - 60);
+            
+            for(let i = 0; i < 120; i++) {
+                let d = new Date(start);
+                d.setDate(d.getDate() + i);
+                if (d.getDay() === 6) { 
+                    datesSet.add(getLocalDateString(d));
+                }
+            }
+            
+            let sortedDates = Array.from(datesSet).sort();
+            if (!sortedDates.includes(centerDateStr)) {
+                sortedDates.push(centerDateStr);
+                sortedDates.sort();
+            }
+            
+            let centerIndex = sortedDates.indexOf(centerDateStr);
+            let result = [];
+            
+            for(let i = -2; i <= 2; i++) {
+                let idx = centerIndex + i;
+                if(idx >= 0 && idx < sortedDates.length) {
+                    result.push(sortedDates[idx]);
+                } else if (idx < 0) {
+                    result.push(sortedDates[0]); 
+                } else {
+                    result.push(sortedDates[sortedDates.length - 1]);
+                }
+            }
+            return [...new Set(result)].sort();
+        }
+
+        function renderAgenda() {
+            const container = document.getElementById('agenda-container');
+            const viewDateDisplay = document.getElementById('current-view-date');
+            if(!container) return;
+            
+            container.innerHTML = '';
+            const centerDateStr = getLocalDateString(focusDate);
+            currentTimeline = calculateTimeline(centerDateStr);
+            viewDateDisplay.textContent = formatDayHeader(centerDateStr);
+
+            currentTimeline.forEach((dateStr) => {
+                const isCenter = dateStr === centerDateStr;
+                const dateObj = new Date(dateStr + 'T12:00:00');
+                const isSaturday = dateObj.getDay() === 6;
+                const dayActivities = activities.filter(act => act.date === dateStr);
+
+                const col = document.createElement('div');
+                col.className = `flex-1 min-w-[160px] flex flex-col bg-white rounded-xl border-2 transition-all ${isCenter ? 'border-scout-blue shadow-lg scale-[1.02]' : 'border-gray-100'} overflow-hidden day-column`;
+                
+                col.innerHTML = `
+                    <div class="${isCenter ? 'bg-scout-blue text-white' : (isSaturday ? 'bg-orange-50 text-orange-800 border-b border-orange-100' : 'bg-gray-100 text-gray-700')} py-2.5 px-3 text-center font-medium capitalize text-sm relative">
+                        ${isCenter ? '<i class="fa-solid fa-crosshairs text-[10px] absolute left-3 top-3.5 opacity-80"></i>' : ''}
+                        ${formatDayHeader(dateStr)}
+                    </div>
+                    <div class="flex-grow p-3 space-y-3 overflow-y-auto" id="day-${dateStr}">
+                        ${dayActivities.length === 0 ? 
+                            `<div class="text-xs text-gray-400 text-center mt-6 flex flex-col items-center"><i class="fa-solid fa-campground text-xl mb-2 opacity-20"></i>Sin actividades</div>` 
+                            : ''}
+                    </div>
+                `;
+
+                container.appendChild(col);
+
+                const dayContent = document.getElementById(`day-${dateStr}`);
+                
+                dayActivities.forEach(act => {
+                    const card = document.createElement('div');
+                    card.className = `bg-white border ${act.completed ? 'border-green-300 bg-green-50' : 'border-gray-200'} rounded-lg p-3 text-sm cursor-pointer hover:shadow-md transition-all group`;
+                    card.onclick = () => window.openActivityModal(act.id);
+                    
+                    const areaTags = (act.areas || []).slice(0, 2).map(area => 
+                        `<span class="inline-block bg-gray-100 text-gray-600 border border-gray-200 text-[10px] px-1.5 py-0.5 rounded truncate max-w-full">${area}</span>`
+                    ).join('');
+                    
+                    card.innerHTML = `
+                        <div class="flex justify-between items-start mb-1.5">
+                            <div class="font-bold text-gray-800 leading-tight ${act.completed ? 'line-through opacity-70' : ''}">${act.title}</div>
+                        </div>
+                        <div class="text-xs text-gray-500 mb-2 flex items-center">
+                            <i class="fa-regular fa-clock mr-1"></i> ${act.duracion || '--'}
+                        </div>
+                        <div class="flex flex-wrap gap-1">
+                            ${areaTags}
+                        </div>
+                        <div class="mt-2 text-[10px] text-scout-blue font-medium group-hover:underline flex items-center justify-end">
+                            Ver plan <i class="fa-solid fa-chevron-right ml-1"></i>
+                        </div>
+                    `;
+                    dayContent.appendChild(card);
+                });
+            });
+        }
+
+        window.openModal = function(id) {
+            document.getElementById(id).classList.remove('hidden');
+        }
+        
+        window.closeModal = function(id) {
+            document.getElementById(id).classList.add('hidden');
+        }
+
+        window.toggleForm = function() {
+            const form = document.getElementById('activity-form');
+            const chevron = document.getElementById('form-chevron');
+            if (form.classList.contains('hidden')) {
+                form.classList.remove('hidden');
+                chevron.style.transform = 'rotate(0deg)';
+            } else {
+                form.classList.add('hidden');
+                chevron.style.transform = 'rotate(180deg)';
+            }
+        }
+
+        window.onclick = function(event) {
+            if (event.target.id === 'activity-modal' || event.target.id === 'attendance-modal' || event.target.id === 'login-modal') {
+                window.closeModal(event.target.id);
+            }
+        }
+
+        window.openAttendanceModal = function() {
+            const container = document.getElementById('attendance-list-container');
+            container.innerHTML = listaCaminantes.map((name) => {
+                const isChecked = currentAttendanceSelection.includes(name) ? 'checked' : '';
+                return `
+                <label class="flex items-center space-x-3 p-3 border-b border-gray-100 hover:bg-gray-50 cursor-pointer rounded">
+                    <input type="checkbox" value="${name}" class="attendance-cb w-4 h-4 text-scout-blue rounded focus:ring-scout-blue" ${isChecked}>
+                    <span class="text-gray-700 font-medium">${name}</span>
+                </label>`;
+            }).join('');
+            window.openModal('attendance-modal');
+        }
+
+        window.saveAttendanceForm = function() {
+            const checkboxes = document.querySelectorAll('.attendance-cb:checked');
+            currentAttendanceSelection = Array.from(checkboxes).map(cb => cb.value);
+            document.getElementById('attendance-count').textContent = currentAttendanceSelection.length;
+            window.closeModal('attendance-modal');
+        }
+
+        window.openActivityModal = function(id) {
+            const act = activities.find(a => a.id === id);
+            if (!act) return;
+
+            document.getElementById('modal-title').textContent = act.title;
+            const content = document.getElementById('modal-content');
+            
+            const areaTags = (act.areas || []).map(area => 
+                `<span class="bg-blue-100 text-scout-blue text-xs font-semibold px-2.5 py-1 rounded-md border border-blue-200">${area}</span>`
+            ).join('');
+
+            const attendanceList = (act.asistencia && act.asistencia.length > 0) 
+                ? act.asistencia.map(name => `<li class="flex items-center text-sm text-gray-700 mb-1"><i class="fa-solid fa-check text-green-500 mr-2"></i> ${name}</li>`).join('')
+                : '<p class="text-sm text-gray-500 italic">No se registró asistencia</p>';
+
+            // Solo mostrar botones de administrador si está logueado
+            const adminButtons = isAdmin ? `
+                <div class="mt-8 pt-4 border-t border-gray-200 flex flex-wrap justify-end gap-3">
+                     <button onclick="window.deleteActivity('${act.id}')" class="px-5 py-2.5 border border-red-200 text-red-600 rounded-lg hover:bg-red-50 font-medium text-sm transition-colors">
+                        <i class="fa-solid fa-trash mr-1"></i> Eliminar
+                    </button>
+                    <button onclick="window.toggleStatus('${act.id}')" class="px-5 py-2.5 ${act.completed ? 'bg-orange-500 hover:bg-orange-600' : 'bg-green-600 hover:bg-green-700'} text-white rounded-lg font-medium text-sm transition-colors">
+                        ${act.completed ? '<i class="fa-solid fa-rotate-left mr-1"></i> Marcar Pendiente' : '<i class="fa-solid fa-check mr-1"></i> Marcar Completada'}
+                    </button>
+                </div>
+            ` : '';
+
+            content.innerHTML = `
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6 bg-gray-50 p-4 rounded-xl border border-gray-100">
+                    <div>
+                        <span class="block text-[10px] uppercase text-gray-500 font-bold tracking-wider mb-1">Fecha</span>
+                        <span class="font-semibold text-gray-800 text-sm"><i class="fa-regular fa-calendar text-scout-blue mr-1"></i> ${act.date}</span>
+                    </div>
+                    <div>
+                        <span class="block text-[10px] uppercase text-gray-500 font-bold tracking-wider mb-1">Coordinador</span>
+                        <span class="font-semibold text-gray-800 text-sm"><i class="fa-solid fa-user-tie text-scout-blue mr-1"></i> ${act.coordinador || '--'}</span>
+                    </div>
+                    <div>
+                        <span class="block text-[10px] uppercase text-gray-500 font-bold tracking-wider mb-1">Duración</span>
+                        <span class="font-semibold text-gray-800 text-sm"><i class="fa-regular fa-clock text-scout-blue mr-1"></i> ${act.duracion || '--'}</span>
+                    </div>
+                    <div>
+                        <span class="block text-[10px] uppercase text-gray-500 font-bold tracking-wider mb-1">Estado</span>
+                        <span class="font-semibold text-sm ${act.completed ? 'text-green-600' : 'text-orange-500'}">
+                            <i class="fa-solid ${act.completed ? 'fa-check-circle' : 'fa-circle-dot'} mr-1"></i> ${act.completed ? 'Completada' : 'Pendiente'}
+                        </span>
+                    </div>
+                </div>
+
+                ${areaTags ? `<div class="mb-6"><h4 class="text-xs font-bold text-gray-400 mb-2 uppercase tracking-wide">Áreas de Desarrollo</h4><div class="flex flex-wrap gap-2">${areaTags}</div></div>` : ''}
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="md:col-span-2 space-y-5">
+                        ${act.objetivo ? `<div><h4 class="font-bold text-scout-blue flex items-center border-b border-gray-100 pb-1 mb-2"><i class="fa-solid fa-bullseye mr-2 w-4"></i> Objetivo</h4><p class="text-gray-700 text-sm bg-white">${act.objetivo}</p></div>` : ''}
+                        ${act.materiales ? `<div><h4 class="font-bold text-scout-blue flex items-center border-b border-gray-100 pb-1 mb-2"><i class="fa-solid fa-box-open mr-2 w-4"></i> Materiales</h4><p class="text-gray-700 text-sm bg-white">${act.materiales}</p></div>` : ''}
+                        ${act.introduccion ? `<div><h4 class="font-bold text-scout-blue flex items-center border-b border-gray-100 pb-1 mb-2"><i class="fa-solid fa-door-open mr-2 w-4"></i> Introducción</h4><p class="text-gray-700 text-sm bg-white">${act.introduccion}</p></div>` : ''}
+                        ${act.desarrollo ? `<div><h4 class="font-bold text-scout-blue flex items-center border-b border-gray-100 pb-1 mb-2"><i class="fa-solid fa-person-hiking mr-2 w-4"></i> Desarrollo</h4><p class="text-gray-700 text-sm bg-white whitespace-pre-wrap">${act.desarrollo}</p></div>` : ''}
+                        ${act.conclusion ? `<div><h4 class="font-bold text-scout-blue flex items-center border-b border-gray-100 pb-1 mb-2"><i class="fa-solid fa-flag-checkered mr-2 w-4"></i> Conclusión</h4><p class="text-gray-700 text-sm bg-white">${act.conclusion}</p></div>` : ''}
+                        ${act.plan_b ? `<div><h4 class="font-bold text-red-600 flex items-center border-b border-red-100 pb-1 mb-2"><i class="fa-solid fa-life-ring mr-2 w-4"></i> Plan B</h4><p class="text-gray-700 text-sm bg-red-50 p-3 rounded-lg border border-red-100">${act.plan_b}</p></div>` : ''}
+                    </div>
+                    
+                    <div class="bg-gray-50 border border-gray-200 rounded-xl p-4 h-fit">
+                        <h4 class="font-bold text-gray-800 flex items-center border-b border-gray-200 pb-2 mb-3">
+                            <i class="fa-solid fa-clipboard-user mr-2 text-scout-blue"></i> Asistencia (${act.asistencia ? act.asistencia.length : 0})
+                        </h4>
+                        <ul class="space-y-1 max-h-[300px] overflow-y-auto custom-scrollbar">
+                            ${attendanceList}
+                        </ul>
+                    </div>
+                </div>
+
+                ${adminButtons}
+            `;
+            window.openModal('activity-modal');
+        }
+
+        window.toggleStatus = async function(id) {
+            if (!isAdmin) return;
+            const act = activities.find(a => a.id === id);
+            if (act) {
+                const docRef = doc(db, 'activities', id);
+                await updateDoc(docRef, { completed: !act.completed });
+                window.closeModal('activity-modal');
+            }
+        }
+
+        window.deleteActivity = async function(id) {
+            if (!isAdmin) return;
+            const docRef = doc(db, 'activities', id);
+            await deleteDoc(docRef);
+            window.closeModal('activity-modal');
+        }
+
+        window.onload = function() {
+            document.getElementById('date').value = getLocalDateString(focusDate);
+            
+            // Vigilar si alguien inicia o cierra sesión
+            onAuthStateChanged(auth, (user) => {
+                const formCol = document.getElementById('form-column');
+                const agendaCol = document.getElementById('agenda-column');
+                const btnLogin = document.getElementById('btn-login-modal');
+                const btnLogout = document.getElementById('btn-logout');
+
+                if (user) {
+                    isAdmin = true;
+                    // MODO DIRIGENTE: Mostrar formulario y achicar agenda
+                    formCol.classList.remove('hidden');
+                    agendaCol.classList.remove('lg:col-span-12');
+                    agendaCol.classList.add('lg:col-span-8');
+                    btnLogin.classList.add('hidden');
+                    btnLogout.classList.remove('hidden');
+                } else {
+                    isAdmin = false;
+                    // MODO LECTURA: Ocultar formulario y expandir agenda
+                    formCol.classList.add('hidden');
+                    agendaCol.classList.remove('lg:col-span-8');
+                    agendaCol.classList.add('lg:col-span-12');
+                    btnLogin.classList.remove('hidden');
+                    btnLogout.classList.add('hidden');
+                }
+                window.closeModal('login-modal');
+                
+                // Si la ventana de actividad estaba abierta, la cerramos para que se actualicen los botones de borrar
+                if (!document.getElementById('activity-modal').classList.contains('hidden')) {
+                    window.closeModal('activity-modal');
+                }
+            });
+
+            // Conectar al canal en tiempo real de tu base de datos
+            const activitiesRef = collection(db, 'activities');
+            onSnapshot(activitiesRef, (snapshot) => {
+                activities = [];
+                snapshot.forEach((docSnap) => {
+                    activities.push({ id: docSnap.id, ...docSnap.data() });
+                });
+                renderAgenda();
+            }, (error) => {
+                console.error("Error sincronizando actividades:", error);
+            });
+
+            // Event Listeners: Login y Logout
+            document.getElementById('login-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                // Tomamos el usuario y lo convertimos a minúsculas
+                const username = document.getElementById('login-username').value.trim().toLowerCase();
+                const pass = document.getElementById('login-password').value;
+                
+                // Truco: le agregamos un dominio falso para que Firebase lo acepte como correo
+                const fakeEmail = username + '@champaqui.app';
+                
+                try {
+                    await signInWithEmailAndPassword(auth, fakeEmail, pass);
+                    document.getElementById('login-form').reset();
+                } catch (error) {
+                    alert('Usuario o contraseña incorrectos. Por favor, intenta de nuevo.');
+                }
+            });
+
+            document.getElementById('btn-logout').addEventListener('click', () => {
+                signOut(auth);
+            });
+
+            // Event Listeners: Carrusel
+            document.getElementById('btn-prev-day').addEventListener('click', () => {
+                const centerDateStr = getLocalDateString(focusDate);
+                const idx = currentTimeline.indexOf(centerDateStr);
+                if (idx > 0) {
+                    focusDate = new Date(currentTimeline[idx - 1] + 'T12:00:00');
+                    document.getElementById('date').value = getLocalDateString(focusDate);
+                    renderAgenda();
+                }
+            });
+
+            document.getElementById('btn-next-day').addEventListener('click', () => {
+                const centerDateStr = getLocalDateString(focusDate);
+                const idx = currentTimeline.indexOf(centerDateStr);
+                if (idx !== -1 && idx < currentTimeline.length - 1) {
+                    focusDate = new Date(currentTimeline[idx + 1] + 'T12:00:00');
+                    document.getElementById('date').value = getLocalDateString(focusDate);
+                    renderAgenda();
+                }
+            });
+
+            document.getElementById('date').addEventListener('change', (e) => {
+                if(e.target.value) {
+                    focusDate = new Date(e.target.value + 'T12:00:00');
+                    renderAgenda();
+                }
+            });
+
+            // Guardar nueva actividad en la Nube
+            document.getElementById('activity-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                if(!isAdmin) {
+                    alert('Debes iniciar sesión como dirigente para guardar actividades.');
+                    return;
+                }
+
+                const selectedAreas = [];
+                document.querySelectorAll('#areas-container input[type="checkbox"]:checked').forEach(cb => selectedAreas.push(cb.value));
+
+                const newActivity = {
+                    title: document.getElementById('title').value,
+                    date: document.getElementById('date').value,
+                    coordinador: document.getElementById('coordinador').value,
+                    duracion: document.getElementById('duracion').value,
+                    areas: selectedAreas,
+                    objetivo: document.getElementById('objetivo').value,
+                    materiales: document.getElementById('materiales').value,
+                    introduccion: document.getElementById('introduccion').value,
+                    desarrollo: document.getElementById('desarrollo').value,
+                    conclusion: document.getElementById('conclusion').value,
+                    plan_b: document.getElementById('plan_b').value,
+                    asistencia: [...currentAttendanceSelection],
+                    completed: false
+                };
+
+                const activitiesRef = collection(db, 'activities');
+                await addDoc(activitiesRef, newActivity);
+                
+                focusDate = new Date(newActivity.date + 'T12:00:00'); 
+                
+                // Reset visual
+                document.getElementById('activity-form').reset();
+                document.getElementById('date').value = newActivity.date;
+                currentAttendanceSelection = [];
+                document.getElementById('attendance-count').textContent = '0';
+                
+                // Si estaba el formulario abierto, lo cerramos para prolijidad
+                toggleForm();
+            });
+        };
+    </script>
+</body>
+</html>
